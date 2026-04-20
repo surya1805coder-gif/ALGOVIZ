@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0a0a1a;
+  --color-bg-secondary: #12122a;
+  --color-bg-card: #1a1a3e;
+  --color-bg-card-hover: #222260;
+  --color-neon-cyan: #00f5ff;
+  --color-neon-pink: #ff006e;
+  --color-neon-purple: #b347d9;
+  --color-neon-green: #39ff14;
+  --color-neon-orange: #ff6b35;
+  --color-neon-yellow: #ffe600;
+  --color-neon-blue: #4d7cff;
+  --color-neon-red: #ff3366;
+  --color-text-primary: #e8e8ff;
+  --color-text-secondary: #9999cc;
+  --color-text-muted: #6666aa;
+  --color-border-color: #2a2a5a;
+  --color-surface: #151535;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a5a #0a0a1a;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #2a2a5a;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3a7a;
+}
+
+body {
+  background: #0a0a1a;
+  color: #e8e8ff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 5px var(--glow-color, #00f5ff), 0 0 10px var(--glow-color, #00f5ff); }
+  50% { box-shadow: 0 0 10px var(--glow-color, #00f5ff), 0 0 20px var(--glow-color, #00f5ff); }
+}
+
+@keyframes bar-swap {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0.8); }
+  100% { transform: scaleY(1); }
+}
+
+.glow-cyan { --glow-color: #00f5ff; animation: glow-pulse 1.5s ease-in-out infinite; }
+.glow-pink { --glow-color: #ff006e; animation: glow-pulse 1.5s ease-in-out infinite; }
+.glow-green { --glow-color: #39ff14; animation: glow-pulse 1.5s ease-in-out infinite; }
+.glow-orange { --glow-color: #ff6b35; animation: glow-pulse 1.5s ease-in-out infinite; }
+.glow-purple { --glow-color: #b347d9; animation: glow-pulse 1.5s ease-in-out infinite; }
+
+.glass-card {
+  background: rgba(26, 26, 62, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(42, 42, 90, 0.5);
+}
+
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #00f5ff, #b347d9, #ff006e);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.neon-text {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
