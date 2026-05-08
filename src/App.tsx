@@ -4,6 +4,9 @@ import SortingViz from './components/SortingViz';
 import SearchingViz from './components/SearchingViz';
 import GraphViz from './components/GraphViz';
 import TreeViz from './components/TreeViz';
+import CodeConsole from './components/CodeConsole';
+import Quiz from './components/Quiz';
+import { allAlgorithms } from './data/algorithms';
 import {
   Search,
   ArrowUpDown,
@@ -19,13 +22,14 @@ import {
 
 } from 'lucide-react';
 
-type Tab = 'sorting' | 'searching' | 'graphs' | 'trees' | 'reference';
+type Tab = 'sorting' | 'searching' | 'graphs' | 'trees' | 'quiz' | 'reference';
 
 const tabs = [
   { id: 'sorting' as Tab, label: 'Sorting', icon: ArrowUpDown, color: '#ff006e', gradient: 'from-neon-pink/20 to-neon-pink/5' },
   { id: 'searching' as Tab, label: 'Searching', icon: Search, color: '#00f5ff', gradient: 'from-neon-cyan/20 to-neon-cyan/5' },
   { id: 'graphs' as Tab, label: 'Graphs', icon: Network, color: '#39ff14', gradient: 'from-neon-green/20 to-neon-green/5' },
   { id: 'trees' as Tab, label: 'Trees', icon: TreePine, color: '#b347d9', gradient: 'from-neon-purple/20 to-neon-purple/5' },
+  { id: 'quiz' as Tab, label: 'Quiz', icon: Code, color: '#ff6b00', gradient: 'from-neon-orange/20 to-neon-orange/5' },
   { id: 'reference' as Tab, label: 'Reference', icon: BookOpen, color: '#ffe600', gradient: 'from-neon-yellow/20 to-neon-yellow/5' },
 ];
 
@@ -266,9 +270,21 @@ function ReferencePanel() {
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('sorting');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [consoleOpen, setConsoleOpen] = useState(false);
+  const [selectedAlgoId, setSelectedAlgoId] = useState('bubble');
+
+  // Sync selected algorithm when tab changes
+  useEffect(() => {
+    if (activeTab === 'sorting') setSelectedAlgoId('bubble');
+    else if (activeTab === 'searching') setSelectedAlgoId('linear');
+    else if (activeTab === 'graphs') setSelectedAlgoId('bfs');
+    else if (activeTab === 'trees') setSelectedAlgoId('inorder');
+  }, [activeTab]);
+
+  const selectedAlgo = allAlgorithms.find(a => a.id === selectedAlgoId) || allAlgorithms[0];
 
   return (
-    <div className="h-screen flex flex-col bg-bg-primary overflow-hidden">
+    <div className="h-screen flex flex-col bg-bg-primary overflow-hidden pb-10">
       {/* Header */}
       <header className="flex-shrink-0 border-b border-border-color/50 bg-bg-secondary/50 backdrop-blur-xl">
         <div className="flex items-center justify-between px-4 py-3">
@@ -402,16 +418,23 @@ export default function App() {
                 transition={{ duration: 0.2 }}
                 className="flex-1 flex flex-col"
               >
-                {activeTab === 'sorting' && <SortingViz />}
-                {activeTab === 'searching' && <SearchingViz />}
+                {activeTab === 'sorting' && <SortingViz onAlgoChange={setSelectedAlgoId} />}
+                {activeTab === 'searching' && <SearchingViz onAlgoChange={setSelectedAlgoId} />}
                 {activeTab === 'graphs' && <GraphViz />}
                 {activeTab === 'trees' && <TreeViz />}
+                {activeTab === 'quiz' && <Quiz />}
                 {activeTab === 'reference' && <ReferencePanel />}
               </motion.div>
             </AnimatePresence>
           </div>
         </main>
       </div>
+
+      <CodeConsole
+        selectedAlgo={selectedAlgo}
+        isOpen={consoleOpen}
+        onToggle={() => setConsoleOpen(!consoleOpen)}
+      />
 
       {/* Footer */}
       <footer className="flex-shrink-0 border-t border-border-color/30 bg-bg-secondary/30 px-4 py-2">

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { searchingAlgorithms } from '../data/algorithms';
 import { AlgorithmInfo, SearchStep } from '../types';
 import { RotateCcw, Shuffle, Info, ChevronDown, Search, Target, SkipBack, SkipForward, List, Gauge, Code, Layers, GitBranch, Edit3 } from 'lucide-react';
+import PseudocodePanel from './PseudocodePanel';
 
 const SPEED_OPTIONS = [
   { label: '🐢 Slow', value: 600 },
@@ -20,7 +21,11 @@ function getSortedArray(size: number): number[] {
   return generateArray(size).sort((a, b) => a - b);
 }
 
-export default function SearchingViz() {
+interface SearchingVizProps {
+  onAlgoChange?: (id: string) => void;
+}
+
+export default function SearchingViz({ onAlgoChange }: SearchingVizProps) {
   const [array, setArray] = useState<number[]>(() => getSortedArray(20));
   const [target, setTarget] = useState<number>(0);
   const [current, setCurrent] = useState(-1);
@@ -42,6 +47,7 @@ export default function SearchingViz() {
   const [steps, setSteps] = useState<SearchStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [isStepMode, setIsStepMode] = useState(false);
+  const [currentLine, setCurrentLine] = useState<number | undefined>();
 
   const stopRef = useRef(false);
   const speedRef = useRef(speed);
@@ -148,6 +154,7 @@ export default function SearchingViz() {
       setRange([-1, -1]);
       setResult('');
       setComparisons(0);
+      setCurrentLine(undefined);
       return;
     }
     
@@ -157,15 +164,22 @@ export default function SearchingViz() {
       setCurrent(step.indices[0]);
       setChecked(prev => [...new Set([...prev, step.indices[0]])]);
       setComparisons(stepIndex + 1);
+      if (selectedAlgo.id === 'linear') setCurrentLine(1);
+      if (selectedAlgo.id === 'binary') setCurrentLine(3);
     } else if (step.type === 'found') {
       setFound(step.indices[0]);
       setResult(`Found at index ${step.indices[0]}`);
+      if (selectedAlgo.id === 'linear') setCurrentLine(2);
+      if (selectedAlgo.id === 'binary') setCurrentLine(4);
     } else if (step.type === 'not-found') {
       setResult('Not found');
+      if (selectedAlgo.id === 'linear') setCurrentLine(3);
+      if (selectedAlgo.id === 'binary') setCurrentLine(9);
     } else if (step.type === 'range-update') {
       setRange([step.indices[0], step.indices[1]]);
+      if (selectedAlgo.id === 'binary') setCurrentLine(2);
     }
-  }, [steps]);
+  }, [steps, selectedAlgo.id]);
 
   const nextStep = useCallback(() => {
     goToStep(currentStepIndex + 1);
@@ -177,8 +191,10 @@ export default function SearchingViz() {
 
   // Search Algorithms
   const runLinearSearch = useCallback(async () => {
+    setCurrentLine(0);
     for (let i = 0; i < array.length; i++) {
       if (stopRef.current) return;
+      setCurrentLine(1);
       setCurrent(i);
       setComparisons(prev => prev + 1);
       addStep('compare', [i], `Checking index ${i}: ${array[i]}`, array);
@@ -186,12 +202,14 @@ export default function SearchingViz() {
       setChecked(prev => [...prev, i]);
       
       if (array[i] === target) {
+        setCurrentLine(2);
         setFound(i);
         addStep('found', [i], `Found ${target} at index ${i}!`, array);
         setResult(`Found at index ${i} after ${i + 1} comparisons`);
         return;
       }
     }
+    setCurrentLine(3);
     addStep('not-found', [], `${target} not found in array`, array);
     setResult('Not found');
   }, [array, target, sleep, addStep]);
@@ -219,10 +237,13 @@ export default function SearchingViz() {
       
       if (array[mid] < target) {
         left = mid + 1;
+        setCurrentLine(6);
       } else {
         right = mid - 1;
+        setCurrentLine(8);
       }
     }
+    setCurrentLine(9);
     addStep('not-found', [], `${target} not found in array`, array);
     setResult('Not found');
   }, [array, target, sleep, addStep]);
@@ -445,7 +466,11 @@ export default function SearchingViz() {
                   {searchingAlgorithms.map((algo) => (
                     <button
                       key={algo.id}
-                      onClick={() => { setSelectedAlgo(algo); setShowAlgoDropdown(false); }}
+                      onClick={() => {
+                        setSelectedAlgo(algo);
+                        setShowAlgoDropdown(false);
+                        onAlgoChange?.(algo.id);
+                      }}
                       className={`w-full px-4 py-3 text-left hover:bg-bg-secondary transition-colors ${
                         selectedAlgo.id === algo.id ? 'bg-neon-cyan/10 text-neon-cyan' : 'text-text-primary'
                       }`}
@@ -693,6 +718,11 @@ export default function SearchingViz() {
 
       {/* Right Column - Speed Control & Steps */}
       <div className="w-80 flex-shrink-0 flex flex-col gap-4">
+        {/* Pseudocode */}
+        <div className="h-48">
+          <PseudocodePanel pseudocode={selectedAlgo.pseudocode || []} currentLine={currentLine} />
+        </div>
+
         {/* Speed Control */}
         <div className="glass-card rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">

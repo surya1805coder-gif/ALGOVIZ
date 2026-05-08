@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { sortingAlgorithms } from '../data/algorithms';
 import { AlgorithmInfo, SortingStep } from '../types';
 import { Play, Pause, RotateCcw, Shuffle, Info, ChevronDown, SkipBack, SkipForward, List, Gauge, Code, Layers, GitBranch, Edit3 } from 'lucide-react';
+import PseudocodePanel from './PseudocodePanel';
 
 const SPEED_OPTIONS = [
   { label: '🐢 Slow', value: 500 },
@@ -24,7 +25,11 @@ function generateArray(size: number): number[] {
   return Array.from({ length: size }, () => Math.floor(Math.random() * 95) + 5);
 }
 
-export default function SortingViz() {
+interface SortingVizProps {
+  onAlgoChange?: (id: string) => void;
+}
+
+export default function SortingViz({ onAlgoChange }: SortingVizProps) {
   const [array, setArray] = useState<number[]>(() => generateArray(25));
   const [comparing, setComparing] = useState<number[]>([]);
   const [swapping, setSwapping] = useState<number[]>([]);
@@ -44,6 +49,7 @@ export default function SortingViz() {
   const [steps, setSteps] = useState<SortingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [isStepMode, setIsStepMode] = useState(false);
+  const [currentLine, setCurrentLine] = useState<number | undefined>();
 
   const stopRef = useRef(false);
   const pauseRef = useRef(false);
@@ -140,6 +146,7 @@ export default function SortingViz() {
       setComparing([]);
       setSwapping([]);
       setSorted([]);
+      setCurrentLine(undefined);
       return;
     }
     
@@ -149,15 +156,23 @@ export default function SortingViz() {
     if (step.type === 'compare') {
       setComparing(step.indices);
       setSwapping([]);
+      // Map to pseudocode lines (simplified mapping)
+      if (selectedAlgo.id === 'bubble') setCurrentLine(2);
+      if (selectedAlgo.id === 'selection') setCurrentLine(2);
+      if (selectedAlgo.id === 'insertion') setCurrentLine(3);
     } else if (step.type === 'swap') {
       setComparing([]);
       setSwapping(step.indices);
+      if (selectedAlgo.id === 'bubble') setCurrentLine(3);
+      if (selectedAlgo.id === 'selection') setCurrentLine(5);
+      if (selectedAlgo.id === 'insertion') setCurrentLine(4);
     } else if (step.type === 'sorted') {
       setComparing([]);
       setSwapping([]);
       setSorted(step.indices);
+      setCurrentLine(undefined);
     }
-  }, [steps, size]);
+  }, [steps, size, selectedAlgo.id]);
 
   const nextStep = useCallback(() => {
     goToStep(currentStepIndex + 1);
@@ -249,14 +264,18 @@ export default function SortingViz() {
     const arr = [...array];
     let comp = 0, sw = 0;
     for (let i = 0; i < arr.length; i++) {
+      setCurrentLine(0);
       for (let j = 0; j < arr.length - i - 1; j++) {
         if (stopRef.current) return;
+        setCurrentLine(1);
         setComparing([j, j + 1]);
         comp++;
         setComparisons(comp);
         addStep('compare', [j, j + 1], `Compare ${arr[j]} and ${arr[j + 1]}`, arr);
+        setCurrentLine(2);
         await sleep();
         if (arr[j] > arr[j + 1]) {
+          setCurrentLine(3);
           setSwapping([j, j + 1]);
           [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
           sw++;
@@ -578,7 +597,11 @@ export default function SortingViz() {
                   {sortingAlgorithms.map((algo) => (
                     <button
                       key={algo.id}
-                      onClick={() => { setSelectedAlgo(algo); setShowAlgoDropdown(false); }}
+                      onClick={() => {
+                        setSelectedAlgo(algo);
+                        setShowAlgoDropdown(false);
+                        onAlgoChange?.(algo.id);
+                      }}
                       className={`w-full px-4 py-3 text-left hover:bg-bg-secondary transition-colors ${
                         selectedAlgo.id === algo.id ? 'bg-neon-pink/10 text-neon-pink' : 'text-text-primary'
                       }`}
@@ -827,6 +850,11 @@ export default function SortingViz() {
 
       {/* Right Column - Speed Control & Steps */}
       <div className="w-80 flex-shrink-0 flex flex-col gap-4">
+        {/* Pseudocode */}
+        <div className="h-48">
+          <PseudocodePanel pseudocode={selectedAlgo.pseudocode || []} currentLine={currentLine} />
+        </div>
+
         {/* Speed Control */}
         <div className="glass-card rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">

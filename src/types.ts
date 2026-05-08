@@ -9,6 +9,12 @@ export interface AlgorithmInfo {
   stable?: boolean;
   description: string;
   level: 'beginner' | 'intermediate' | 'advanced';
+  pseudocode?: string[];
+  implementations?: {
+    python: string;
+    java: string;
+    c: string;
+  };
 }
 
 export interface GraphNode {
