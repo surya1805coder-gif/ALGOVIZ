@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SortingViz from './components/SortingViz';
 import SearchingViz from './components/SearchingViz';

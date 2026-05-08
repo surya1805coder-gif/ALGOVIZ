@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Editor from 'react-simple-code-editor';
-// @ts-ignore
-import { highlight, languages } from 'prismjs';
+import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-c';
@@ -145,7 +144,7 @@ export default function CodeConsole({ selectedAlgo, isOpen, onToggle }: CodeCons
                 <Editor
                   value={code}
                   onValueChange={setCode}
-                  highlight={(code) => highlight(code, languages[language === 'python' ? 'python' : (language === 'java' ? 'java' : 'c')], language)}
+                  highlight={(code) => Prism.highlight(code, Prism.languages[language === 'python' ? 'python' : (language === 'java' ? 'java' : 'c')], language)}
                   padding={20}
                   style={{
                     fontFamily: '"Fira Code", "Fira Mono", monospace',
